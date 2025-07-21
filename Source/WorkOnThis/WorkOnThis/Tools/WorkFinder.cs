@@ -5,6 +5,7 @@ using System.Linq;
 using UnityEngine;
 using Verse;
 using Verse.AI;
+using WorkOnThis.Cache;
 using WorkOnThis.Windows;
 
 namespace WorkOnThis.Tools
@@ -183,7 +184,14 @@ namespace WorkOnThis.Tools
 
         private static IEnumerable<(Job, Thing, WorkGiverDef)> GetAllAvailableJobs(ThingWithComps thing, Pawn pawn)
         {
+            if (!BillGiverCache.IsUpdateNow(thing, pawn))
+            {
+                foreach ((Job, Thing, WorkGiverDef) value in BillGiverCache.GetValues())
+                    yield return value;
+                yield break;
+            }
             List<Thing> list = pawn.Map.listerThings.ThingsInGroup(ThingRequestGroup.PotentialBillGiver);
+
             for (int i = 0; i < list.Count; i++)
             {
                 Thing workSpot = list[i];
@@ -194,18 +202,17 @@ namespace WorkOnThis.Tools
                         WorkGiverDef workGiverDef = billGiver.GetWorkgiver();
                         Job job = JobOnBill(pawn, thing, workSpot, bill, workGiverDef);
                         if (job == null)
-                            continue;
+                             continue;
 
                         if (GetIngredients(job).Any(thingCount => thingCount.Thing == thing))
                         {
+                            BillGiverCache.Insert(job, workSpot, workGiverDef);
                             yield return (job, workSpot, workGiverDef);
                             break;
                         }
                     }
                 }
             }
-
-            yield break;
         }
 
         private static List<ThingCount> GetIngredients(Job job)
@@ -235,10 +242,13 @@ namespace WorkOnThis.Tools
                 WorkGiverDef workGiverDef = pair.Item3;
 
                 string text = "PrioritizeGeneric".Translate((workGiverDef.Worker as WorkGiver_DoBill).PostProcessedGerund(job), workSpot.Label).CapitalizeFirst();
-                subs.Add(new FloatMenuOption(text, () => {
+                FloatMenuOption sub = new FloatMenuOption(text, () =>
+                {
                     bool shiftHeld = (Event.current != null && Event.current.shift);
                     pawn.jobs.TryTakeOrderedJob(job, JobTag.Misc, shiftHeld);
-                }, iconThing: workSpot, iconColor: Color.white));
+                }, iconThing: workSpot, iconColor: Color.white);
+
+                subs.Add(sub);
             }
 
             if (subs.Count == 0)
@@ -247,7 +257,7 @@ namespace WorkOnThis.Tools
                 return false;
             }
 
-            var workOn = new FloatMenuOption("작업하기...", () =>
+            var workOn = new FloatMenuOption("WorkOnThis.UI.WorkOnThis".Translate(), () =>
             {
                 Rect existingRect = new Rect();
                 foreach (Window win in Find.WindowStack.Windows)
@@ -262,6 +272,7 @@ namespace WorkOnThis.Tools
                 PositionedFloatMenu subMenu = new PositionedFloatMenu(subs, thing, existingRect.x, existingRect.y);
                 Find.WindowStack.Add(subMenu);
             });
+            workOn.tooltip = "WorkOnThis.UI.WorkOnThis.Desc".Translate();
 
             option = workOn;
             return true;

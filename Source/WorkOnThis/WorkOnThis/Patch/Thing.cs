@@ -11,7 +11,7 @@ namespace WorkOnThis.Patch.Thing_
         static IEnumerable<FloatMenuOption> Postfix(IEnumerable<FloatMenuOption> __result, ThingWithComps __instance, Pawn selPawn)
         {
             FloatMenuOption workOn;
-            if (!selPawn.Drafted && WorkFinder.GetWorkOnMenu(__instance, selPawn, out workOn))
+            if (__instance.Spawned && !selPawn.Drafted && WorkFinder.GetWorkOnMenu(__instance, selPawn, out workOn))
                 yield return workOn;
 
             foreach (var option in __result)
