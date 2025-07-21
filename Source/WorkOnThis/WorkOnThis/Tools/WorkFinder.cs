@@ -186,7 +186,7 @@ namespace WorkOnThis.Tools
         {
             if (!BillGiverCache.IsUpdateNow(thing, pawn))
             {
-                foreach ((Job, Thing, WorkGiverDef) value in BillGiverCache.GetValues())
+                foreach ((Job, Thing, WorkGiverDef) value in BillGiverCache.GetValues(thing))
                     yield return value;
                 yield break;
             }
@@ -206,7 +206,7 @@ namespace WorkOnThis.Tools
 
                         if (GetIngredients(job).Any(thingCount => thingCount.Thing == thing))
                         {
-                            BillGiverCache.Insert(job, workSpot, workGiverDef);
+                            BillGiverCache.Insert(thing, job, workSpot, workGiverDef);
                             yield return (job, workSpot, workGiverDef);
                             break;
                         }
