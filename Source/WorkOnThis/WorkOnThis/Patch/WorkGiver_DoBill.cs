@@ -2,9 +2,11 @@
 using RimWorld;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using UnityEngine;
 using Verse;
+using Verse.AI;
 using WorkOnThis.Tools;
 
 namespace WorkOnThis.Patch.WorkGiver_DoBill_
@@ -25,7 +27,7 @@ namespace WorkOnThis.Patch.WorkGiver_DoBill_
                     return -100000;
                 return (t.Position - rootCell).LengthHorizontalSquared;
             });
-            
+
             for (int i = 0; i < bill.recipe.ingredients.Count; i++)
             {
                 IngredientCount ingredientCount = bill.recipe.ingredients[i];
@@ -162,6 +164,17 @@ namespace WorkOnThis.Patch.WorkGiver_DoBill_
 
             __result = true;
             return false;
+        }
+    }
+
+    [HarmonyPatch(typeof(WorkGiver_DoBill), "TryFindBestBillIngredientsInSet_NoMix")]
+    public class TryFindBestBillIngredientsInSet_NoMix_Patch
+    {
+        static bool Prefix(ref bool __result, List<Thing> availableThings, Bill bill, List<ThingCount> chosen, IntVec3 rootCell, bool alreadySorted, List<IngredientCount> missingIngredients)
+        {
+            if (WorkFinder.ForcedThing != null && !availableThings.Contains(WorkFinder.ForcedThing))
+                availableThings.Add(WorkFinder.ForcedThing);
+            return true;
         }
     }
 }

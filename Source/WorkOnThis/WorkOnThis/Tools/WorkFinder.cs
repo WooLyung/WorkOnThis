@@ -242,6 +242,9 @@ namespace WorkOnThis.Tools
                 WorkGiverDef workGiverDef = pair.Item3;
 
                 string text = "PrioritizeGeneric".Translate((workGiverDef.Worker as WorkGiver_DoBill).PostProcessedGerund(job), workSpot.Label).CapitalizeFirst();
+                if (job.bill != null)
+                    text = $"{job.bill.Label} ({workSpot.LabelShort})";
+
                 FloatMenuOption sub = new FloatMenuOption(text, () =>
                 {
                     bool shiftHeld = (Event.current != null && Event.current.shift);
